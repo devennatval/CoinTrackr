@@ -33,7 +33,7 @@ struct TransactionListView: View {
     }
 
     var body: some View {
-        List {
+        Group {
             if transactions.isEmpty {
                 VStack {
                     Spacer()
@@ -42,10 +42,16 @@ struct TransactionListView: View {
                     Spacer()
                 }
             } else {
-                ForEach(transactions) { tx in
-                    TransactionRowView(transaction: tx, latestPrice: coin.currentPrice)
+                List {
+                    if transactions.isEmpty {
+                        
+                    } else {
+                        ForEach(transactions) { tx in
+                            TransactionRowView(transaction: tx, latestPrice: coin.currentPrice)
+                        }
+                        .onDelete(perform: deleteTransactions)
+                    }
                 }
-                .onDelete(perform: deleteTransactions)
             }
         }
         .navigationTitle("\(coin.symbol.uppercased()) Logs")
