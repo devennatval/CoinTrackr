@@ -50,8 +50,7 @@ struct PortfolioView: View {
             viewModel.loadCoins()
         }) {
             NavigationStack {
-//                AddTransactionView()
-                Text("Add Transaction View")
+                AddTransactionView(viewModel: AddTransactionViewModel(context: context))
             }
         }
         .alert("Delete Coin?", isPresented: $showDeleteAlert, presenting: toDeleteCoin) { coin in
