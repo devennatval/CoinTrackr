@@ -20,7 +20,9 @@ struct PortfolioView: View {
         NavigationStack {
             List {
                 ForEach(viewModel.coins) { coin in
-                    CoinRowView(coin: coin)
+                    NavigationLink(destination: TransactionListView(coin: coin)) {
+                        CoinRowView(coin: coin)
+                    }
                     .swipeActions {
                         Button() {
                             toDeleteCoin = coin
