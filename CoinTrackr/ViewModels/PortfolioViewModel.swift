@@ -14,6 +14,10 @@ class PortfolioViewModel: ObservableObject {
     private let context: ModelContext
 
     @Published var coins: [Coin] = []
+    @Published var isFetching: Bool = false
+    @Published var nextFetchIn: Int = 60
+
+    private var timer: AnyCancellable?
 
     init(context: ModelContext) {
         self.context = context
@@ -31,5 +35,38 @@ class PortfolioViewModel: ObservableObject {
         context.delete(coin)
         try? context.save()
         coins.removeAll{ $0.id == coin.id }
+    }
+
+    func fetchPrices() async {
+        isFetching = true
+        defer { isFetching = false }
+
+        do {
+            let priceMap = try await CoinGeckoService.shared.fetchPrices(for: coins.map { $0.coinGeckoID })
+            for coin in coins {
+                if let price = priceMap[coin.coinGeckoID] {
+                    coin.currentPrice = price
+                    coin.lastUpdated = Date()
+                }
+            }
+            try context.save()
+        } catch {
+            print("Price fetch error: \(error)")
+        }
+    }
+
+    func startAutoFetch() {
+        timer = Timer.publish(every: 1, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+
+                if self.nextFetchIn > 0 {
+                    self.nextFetchIn -= 1
+                } else {
+                    Task { await self.fetchPrices() }
+                    self.nextFetchIn = 60
+                }
+            }
     }
 }

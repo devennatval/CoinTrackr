@@ -43,9 +43,16 @@ struct PortfolioView: View {
                         Image(systemName: "plus")
                     }
                 }
+
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Text("Next fetch: \(viewModel.nextFetchIn)s")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
             .onAppear {
                 viewModel.loadCoins()
+                viewModel.startAutoFetch()
             }
         }
         .sheet(isPresented: $showAddTransaction, onDismiss: {
