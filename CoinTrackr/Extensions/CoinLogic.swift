@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 extension Coin {
-    func recalculateAveragePrice(using context: ModelContext) {
+    func recalculateTotalAmountAndAveragePrice(using context: ModelContext) {
         let id = self.id
         
         let descriptor = FetchDescriptor<CoinTransaction>(
@@ -20,6 +20,8 @@ extension Coin {
             let totalFiat = txs.reduce(0) { $0 + $1.fiatAmount }
             let totalCoin = txs.reduce(0) { $0 + $1.coinAmount }
 
+            self.totalAmount = totalCoin
+            
             if totalCoin > 0 {
                 self.averagePrice = totalFiat / totalCoin
             }

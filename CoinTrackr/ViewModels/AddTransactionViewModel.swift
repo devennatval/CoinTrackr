@@ -90,7 +90,7 @@ class AddTransactionViewModel: ObservableObject {
               let fiatAmount = Double(fiatAmount) else { return }
 
         let coin = resolveCoin(from: availableCoins)
-
+        
         let tx = CoinTransaction(
             coinID: coin.id,
             price: price,
@@ -101,7 +101,7 @@ class AddTransactionViewModel: ObservableObject {
         
         context.insert(tx)
 
-        coin.recalculateAveragePrice(using: context)
+        coin.recalculateTotalAmountAndAveragePrice(using: context)
         try? context.save()
     }
     

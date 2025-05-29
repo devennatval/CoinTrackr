@@ -69,4 +69,25 @@ class PortfolioViewModel: ObservableObject {
                 }
             }
     }
+    
+    var totalValue: Double {
+        coins.reduce(into: 0.0) { result, coin in
+            result += (coin.totalAmount * coin.currentPrice)
+        }
+    }
+
+    var totalCost: Double {
+        coins.reduce(into: 0.0) { result, coin in
+            result += (coin.totalAmount * coin.averagePrice)
+        }
+    }
+
+    var profitLoss: Double {
+        totalValue - totalCost
+    }
+
+    var profitLossPercent: Double {
+        guard totalCost > 0 else { return 0 }
+        return (profitLoss / totalCost) * 100
+    }
 }

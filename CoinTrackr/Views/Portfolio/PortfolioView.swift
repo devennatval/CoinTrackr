@@ -19,18 +19,38 @@ struct PortfolioView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(viewModel.coins) { coin in
-                    NavigationLink(destination: TransactionListView(coin: coin)) {
-                        CoinRowView(coin: coin)
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Portfolio Summary")
+                            .font(.headline)
+
+                        Text("Total Value: \(viewModel.totalValue.currencyString)")
+                            .font(.title3.bold())
+
+                        Text("Unrealized P/L: \(viewModel.profitLoss.currencyString) (\(viewModel.profitLossPercent, specifier: "%.2f")%)")
+                            .foregroundColor(viewModel.profitLoss >= 0 ? .green : .red)
                     }
-                    .swipeActions {
-                        Button() {
-                            toDeleteCoin = coin
-                            showDeleteAlert = true
-                        } label: {
-                            Label("Delete", systemImage: "trash")
+                    .padding(.vertical, 4)
+                }
+                
+                Section(header: Text("Coins")) {
+                    if viewModel.coins.isEmpty {
+                        ContentUnavailableView("No Tokens", systemImage: "bitcoinsign.circle")
+                    } else {
+                        ForEach(viewModel.coins) { coin in
+                            NavigationLink(destination: TransactionListView(coin: coin)) {
+                                CoinRowView(coin: coin)
+                            }
+                            .swipeActions {
+                                Button() {
+                                    toDeleteCoin = coin
+                                    showDeleteAlert = true
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                                .tint(.red)
+                            }
                         }
-                        .tint(.red)
                     }
                 }
             }

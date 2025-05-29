@@ -15,6 +15,7 @@ final class Coin {
     var name: String
     var coinGeckoID: String
     var iconURL: String
+    var totalAmount: Double
     var averagePrice: Double
     var currentPrice: Double
     var lastUpdated: Date
@@ -27,6 +28,7 @@ final class Coin {
         name: String,
         coinGeckoID: String,
         iconURL: String = "",
+        totalAmount: Double = 0,
         averagePrice: Double = 0,
         currentPrice: Double = 0,
         lastUpdated: Date = .distantPast
@@ -36,6 +38,7 @@ final class Coin {
         self.name = name
         self.coinGeckoID = coinGeckoID
         self.iconURL = iconURL
+        self.totalAmount = totalAmount
         self.averagePrice = averagePrice
         self.currentPrice = currentPrice
         self.lastUpdated = lastUpdated
