@@ -13,13 +13,26 @@ import Combine
 class AddTransactionViewModel: ObservableObject {
     private let context: ModelContext
     
-    @Published var selectedCoin: Coin? = nil
+    // MARK: - Inputs
+    @Published var selectedCoin: Coin? {
+        didSet {
+            Task {
+                await handleSelectedCoinChanged(from: oldValue, to: selectedCoin)
+            }
+        }
+    }
     @Published var customSymbol: String = ""
     @Published var price: String = ""
     @Published var coinAmount: String = ""
     @Published var fiatAmount: String = ""
 
+    // MARK: State
     @Published var hasAttemptSave = false
+    @Published var searchResults: [CoinGeckoSearchCoin] = []
+    @Published var isSearching = false
+    @Published var searchError: String?
+
+    private var previousSelectedCoin: Coin?
 
     init(context: ModelContext) {
         self.context = context
@@ -90,5 +103,62 @@ class AddTransactionViewModel: ObservableObject {
 
         coin.recalculateAveragePrice(using: context)
         try? context.save()
+    }
+    
+    func updateSelectedCoin(to newCoin: Coin?) {
+        previousSelectedCoin = selectedCoin
+        selectedCoin = newCoin
+    }
+    
+    private func handleSelectedCoinChanged(from old: Coin?, to new: Coin?) async {
+        guard let oldCoin = old, oldCoin != new else { return }
+
+        let oldId = oldCoin.id
+        let descriptor = FetchDescriptor<CoinTransaction>(
+            predicate: #Predicate { $0.coinID == oldId }
+        )
+
+        do {
+            let transactions = try context.fetch(descriptor)
+            if transactions.isEmpty {
+                context.delete(oldCoin)
+                try? context.save()
+            }
+        } catch {
+            print("Failed to check transactions for cleanup: \(error)")
+        }
+    }
+
+    
+    func searchCoin() async {
+        guard !customSymbol.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        isSearching = true
+        searchError = nil
+        defer { isSearching = false }
+
+        do {
+            searchResults = try await CoinGeckoService.shared.search(query: customSymbol)
+        } catch {
+            searchError = error.localizedDescription
+        }
+    }
+    
+    func selectAndInsertCoin(from dto: CoinGeckoSearchCoin) {
+        // Check if already exists (by CoinGecko ID or symbol, depending on your design)
+        let id = dto.id
+        let descriptor = FetchDescriptor<Coin>(
+            predicate: #Predicate { $0.coinGeckoID == id }
+        )
+
+        if let existing = try? context.fetch(descriptor).first {
+            self.selectedCoin = existing
+            return
+        }
+
+        let newCoin = CoinMapper.from(dto)
+        context.insert(newCoin)
+        try? context.save()
+
+        self.selectedCoin = newCoin
     }
 }

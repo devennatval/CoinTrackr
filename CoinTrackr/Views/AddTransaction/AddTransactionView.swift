@@ -26,7 +26,11 @@ struct AddTransactionView: View {
     var body: some View {
         Form {
             Section(header: Text("Coin")) {
-                Picker("Choose Coin", selection: $viewModel.selectedCoin) {
+                Picker("Choose Coin", selection: Binding(get: {
+                    viewModel.selectedCoin
+                }, set: {
+                    viewModel.updateSelectedCoin(to: $0)
+                })) {
                     Text("Input").tag(Optional<Coin>.none)
                     ForEach(coins) { coin in
                         Text(coin.symbol.uppercased()).tag(Optional(coin))
@@ -34,8 +38,64 @@ struct AddTransactionView: View {
                 }
 
                 if viewModel.selectedCoin == nil {
-                    TextField("Enter Coin Gecko ID (e.g. Bitcoin)", text: $viewModel.customSymbol)
-                        .autocapitalization(.allCharacters)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            TextField("Enter Symbol (e.g. BTC)", text: $viewModel.customSymbol)
+                                .autocapitalization(.allCharacters)
+                                .submitLabel(.search)
+
+                            Button("Check") {
+                                let trimmed = viewModel.customSymbol.trimmingCharacters(in: .whitespacesAndNewlines)
+                                guard !trimmed.isEmpty else { return }
+
+                                Task {
+                                    await viewModel.searchCoin()
+                                }
+                            }
+                        }
+
+                        if viewModel.isSearching {
+                            ProgressView()
+                        } else if let error = viewModel.searchError {
+                            Text(error).foregroundColor(.red)
+                        } else if !viewModel.searchResults.isEmpty {
+                            ScrollView {
+                                LazyVStack(alignment: .leading, spacing: 8) {
+                                    ForEach(viewModel.searchResults) { result in
+                                        Button(action: {
+                                            viewModel.selectAndInsertCoin(from: result)
+                                        }) {
+                                            HStack {
+                                                AsyncImage(url: URL(string: result.thumb)) { phase in
+                                                    switch phase {
+                                                    case .empty: Color.gray.opacity(0.3)
+                                                    case .success(let image): image.resizable()
+                                                    case .failure: Color.red
+                                                    @unknown default: EmptyView()
+                                                    }
+                                                }
+                                                .frame(width: 24, height: 24)
+                                                .clipShape(Circle())
+
+                                                VStack(alignment: .leading) {
+                                                    Text(result.name)
+                                                    Text(result.symbol.uppercased())
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
+                                                }
+                                                .padding(.vertical, 6)
+                                            }
+                                            .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(.top, 4)
+                            }
+                        }
+                            
+                        
+                    }
                 }
             }
 

@@ -34,6 +34,15 @@ final class CoinGeckoService {
         let priceMap = decoded.compactMapValues { $0["usd"] }
         return priceMap
     }
+    
+    func search(query: String) async throws -> [CoinGeckoSearchCoin] {
+        let urlString = "https://api.coingecko.com/api/v3/search?query=\(query)"
+        guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let result = try JSONDecoder().decode(CoinGeckoSearchResult.self, from: data)
+        return result.coins
+    }
 }
 
 enum CoinGeckoError: Error, LocalizedError {
