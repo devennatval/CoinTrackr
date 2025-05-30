@@ -51,8 +51,9 @@ struct CoinRowView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
-                Text("CMP: \(coin.currentPrice.trimDecimal)")
+                Text("Cur: \(coin.currentPrice.trimDecimal)")
                     .font(.subheadline)
+                    .foregroundColor(.secondary)
                 
             }
 
