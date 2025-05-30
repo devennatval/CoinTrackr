@@ -52,7 +52,7 @@ class AddTransactionViewModel: ObservableObject {
     }
     
     func canSave() -> Bool {
-        (selectedCoin != nil || !customSymbol.isEmpty)
+        selectedCoin != nil
         && priceValue != nil
         && coinAmountValue != nil
         && fiatAmountValue != nil

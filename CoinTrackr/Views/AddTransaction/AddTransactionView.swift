@@ -66,7 +66,7 @@ struct AddTransactionView: View {
                                             viewModel.selectAndInsertCoin(from: result)
                                         }) {
                                             HStack {
-                                                AsyncImage(url: URL(string: result.thumb)) { phase in
+                                                AsyncImage(url: URL(string: result.large)) { phase in
                                                     switch phase {
                                                     case .empty: Color.gray.opacity(0.3)
                                                     case .success(let image): image.resizable()
