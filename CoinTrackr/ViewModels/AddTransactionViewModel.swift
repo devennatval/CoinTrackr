@@ -154,7 +154,6 @@ class AddTransactionViewModel: ObservableObject {
     }
     
     func selectAndInsertCoin(from dto: CoinGeckoSearchCoin) {
-        // Check if already exists (by CoinGecko ID or symbol, depending on your design)
         let id = dto.id
         let descriptor = FetchDescriptor<Coin>(
             predicate: #Predicate { $0.coinGeckoID == id }

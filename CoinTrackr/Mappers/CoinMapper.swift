@@ -13,7 +13,7 @@ struct CoinMapper {
             symbol: dto.symbol.uppercased(),
             name: dto.name,
             coinGeckoID: dto.api_symbol,
-            iconURL: dto.thumb,
+            iconURL: dto.large,
             averagePrice: 0,
             currentPrice: 0
         )
