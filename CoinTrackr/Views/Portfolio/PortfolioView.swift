@@ -15,7 +15,8 @@ struct PortfolioView: View {
     @State private var toDeleteCoin: Coin?
     @State private var showAddTransaction = false
     @State private var showDeleteAlert = false
-                                 
+    @State private var showingPnLPicker = false
+
     var body: some View {
         NavigationStack {
             List {
@@ -33,13 +34,13 @@ struct PortfolioView: View {
                     .padding(.vertical, 4)
                 }
                 
-                Section(header: Text("Coins")) {
+                Section(header: coinSectionHeader) {
                     if viewModel.coins.isEmpty {
                         ContentUnavailableView("No Tokens", systemImage: "bitcoinsign.circle")
                     } else {
                         ForEach(viewModel.coins) { coin in
                             NavigationLink(destination: TransactionListView(coin: coin)) {
-                                CoinRowView(coin: coin)
+                                CoinRowView(coin: coin, displayMode: viewModel.pnlDisplayMode)
                             }
                             .swipeActions {
                                 Button() {
@@ -89,6 +90,35 @@ struct PortfolioView: View {
             Button("Cancel", role: .cancel) {}
         } message: { _ in
             Text("This will delete the coin and all its transactions.")
+        }
+    }
+
+    var coinSectionHeader: some View {
+        HStack(spacing: 4) {
+            Text("Coins")
+
+            Spacer()
+
+            Button {
+                showingPnLPicker = true
+            } label: {
+                HStack(spacing: 4) {
+                    Text(viewModel.displayModeLabel)
+                        .foregroundColor(.secondary)
+                    Image(systemName: "chevron.down")
+                        .imageScale(.small)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .actionSheet(isPresented: $showingPnLPicker) {
+            ActionSheet(title: Text("Select View"), buttons: [
+                .default(Text("PnL")) { viewModel.pnlDisplayMode = .amount },
+                .default(Text("% Change")) { viewModel.pnlDisplayMode = .percentage },
+                .default(Text("Price")) { viewModel.pnlDisplayMode = .valueChange },
+                .cancel()
+            ])
         }
     }
 }
