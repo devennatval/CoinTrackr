@@ -11,6 +11,7 @@ import SwiftData
 struct PortfolioView: View {
     @Environment(\.modelContext) private var context
     @ObservedObject var viewModel: PortfolioViewModel
+    @AppStorage(AppStorageKeys.isValueHidden) private var isValueHidden: Bool = false
 
     @State private var toDeleteCoin: Coin?
     @State private var showAddTransaction = false
@@ -20,20 +21,32 @@ struct PortfolioView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section(footer:
-                    Group {
-                        if let lastFetch = viewModel.lastFetchDate {
-                            Text("Last Updated: \(lastFetch.formatted(date: .abbreviated, time: .standard))")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                Section(
+                    header:
+                        HStack {
+                            Text("Summary")
+                            Button(action: {
+                                isValueHidden.toggle()
+                            }) {
+                                Image(systemName: isValueHidden ? "eye.slash" : "eye")
+                                    .imageScale(.medium)
+                            }
+                            .buttonStyle(.plain)
                         }
-                    }
+                    ,footer:
+                        Group {
+                            if let lastFetch = viewModel.lastFetchDate {
+                                Text("Last Updated: \(lastFetch.formatted(date: .abbreviated, time: .standard))")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                 ) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Total Value: \(viewModel.totalValue.currencyString)")
+                        Text("Total Value: \(isValueHidden ? CommonConstant.hiddenValue : viewModel.totalValue.currencyString)")
                             .font(.title3.bold())
 
-                        Text("Unrealized PnL: \(viewModel.profitLoss.currencyString) (\(viewModel.profitLossPercent, specifier: "%.2f")%)")
+                        Text("Unrealized PnL: \(isValueHidden ? CommonConstant.hiddenValue : viewModel.profitLoss.currencyString) (\(viewModel.profitLossPercent, specifier: "%.2f")%)")
                             .foregroundColor(viewModel.profitLoss >= 0 ? .green : .red)
                     }
                     .padding(.vertical, 4)
