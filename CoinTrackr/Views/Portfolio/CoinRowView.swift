@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct CoinRowView: View {
+    @AppStorage(AppStorageKeys.isValueHidden) private var isValueHidden: Bool = false
+
     let coin: Coin
     let displayMode: PnLDisplayMode
 
@@ -26,7 +28,7 @@ struct CoinRowView: View {
     var pnlText: String {
         switch displayMode {
         case .amount:
-            return pnl.currencyString
+            return isValueHidden ? CommonConstant.hiddenValue : pnl.currencyString
         case .percentage:
             return String(format: "%+.2f%%", percentChange)
         case .valueChange:
