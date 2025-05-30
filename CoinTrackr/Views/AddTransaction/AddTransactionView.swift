@@ -100,6 +100,8 @@ struct AddTransactionView: View {
             }
 
             Section(header: Text("Transaction")) {
+                DatePicker("Date", selection: $viewModel.transactionDate, displayedComponents: [.date])
+
                 TextField("Price per Coin", text: $viewModel.price)
                     .keyboardType(.decimalPad)
                     .submitLabel(.next)
