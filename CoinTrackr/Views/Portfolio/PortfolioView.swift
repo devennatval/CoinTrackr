@@ -20,7 +20,15 @@ struct PortfolioView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
+                Section(footer:
+                    Group {
+                        if let lastFetch = viewModel.lastFetchDate {
+                            Text("Last Updated: \(lastFetch.formatted(date: .abbreviated, time: .standard))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                ) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Portfolio Summary")
                             .font(.headline)
@@ -28,7 +36,7 @@ struct PortfolioView: View {
                         Text("Total Value: \(viewModel.totalValue.currencyString)")
                             .font(.title3.bold())
 
-                        Text("Unrealized P/L: \(viewModel.profitLoss.currencyString) (\(viewModel.profitLossPercent, specifier: "%.2f")%)")
+                        Text("Unrealized PnL: \(viewModel.profitLoss.currencyString) (\(viewModel.profitLossPercent, specifier: "%.2f")%)")
                             .foregroundColor(viewModel.profitLoss >= 0 ? .green : .red)
                     }
                     .padding(.vertical, 4)
@@ -64,16 +72,14 @@ struct PortfolioView: View {
                         Image(systemName: "plus")
                     }
                 }
-
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Text("Next fetch: \(viewModel.nextFetchIn)s")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
             }
             .onAppear {
                 viewModel.loadCoins()
                 viewModel.startAutoFetch()
+                
+                Task {
+                    await viewModel.fetchPrices()
+                }
             }
         }
         .sheet(isPresented: $showAddTransaction, onDismiss: {
