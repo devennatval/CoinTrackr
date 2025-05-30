@@ -30,9 +30,6 @@ struct PortfolioView: View {
                     }
                 ) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Portfolio Summary")
-                            .font(.headline)
-
                         Text("Total Value: \(viewModel.totalValue.currencyString)")
                             .font(.title3.bold())
 

@@ -54,7 +54,7 @@ struct TransactionListView: View {
                 }
             }
         }
-        .navigationTitle("\(coin.symbol.uppercased()) Logs")
+        .navigationTitle("\(coin.symbol.uppercased()) Transactions")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
