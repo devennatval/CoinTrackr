@@ -9,6 +9,12 @@ import Foundation
 import SwiftData
 import Combine
 
+enum PnLDisplayMode {
+    case amount
+    case percentage
+    case valueChange
+}
+
 @MainActor
 class PortfolioViewModel: ObservableObject {
     private let context: ModelContext
@@ -16,6 +22,7 @@ class PortfolioViewModel: ObservableObject {
     @Published var coins: [Coin] = []
     @Published var isFetching: Bool = false
     @Published var nextFetchIn: Int = 60
+    @Published var pnlDisplayMode: PnLDisplayMode = .amount
 
     private var timer: AnyCancellable?
 
@@ -89,5 +96,16 @@ class PortfolioViewModel: ObservableObject {
     var profitLossPercent: Double {
         guard totalCost > 0 else { return 0 }
         return (profitLoss / totalCost) * 100
+    }
+    
+    var displayModeLabel: String {
+        switch(pnlDisplayMode) {
+        case .amount:
+            "PnL"
+        case .percentage:
+            "% Change"
+        case .valueChange:
+            "Price"
+        }
     }
 }
