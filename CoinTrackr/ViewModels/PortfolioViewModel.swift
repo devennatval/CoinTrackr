@@ -23,7 +23,9 @@ class PortfolioViewModel: ObservableObject {
     @Published var isFetching: Bool = false
     @Published var nextFetchIn: Int = 15
     @Published var pnlDisplayMode: PnLDisplayMode = .amount
-
+    
+    @Published var lastFetchDate: Date?
+    
     private var timer: AnyCancellable?
 
     init(context: ModelContext) {
@@ -57,6 +59,7 @@ class PortfolioViewModel: ObservableObject {
                 }
             }
             try context.save()
+            self.lastFetchDate = Date()
         } catch {
             print("Price fetch error: \(error)")
         }

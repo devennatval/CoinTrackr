@@ -93,8 +93,6 @@ struct AddTransactionView: View {
                                 .padding(.top, 4)
                             }
                         }
-                            
-                        
                     }
                 }
             }
