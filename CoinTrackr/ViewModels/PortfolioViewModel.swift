@@ -9,14 +9,23 @@ import Foundation
 import SwiftData
 import Combine
 
+enum PnLDisplayMode {
+    case amount
+    case percentage
+    case valueChange
+}
+
 @MainActor
 class PortfolioViewModel: ObservableObject {
     private let context: ModelContext
 
     @Published var coins: [Coin] = []
     @Published var isFetching: Bool = false
-    @Published var nextFetchIn: Int = 60
-
+    @Published var nextFetchIn: Int = 15
+    @Published var pnlDisplayMode: PnLDisplayMode = .amount
+    
+    @Published var lastFetchDate: Date?
+    
     private var timer: AnyCancellable?
 
     init(context: ModelContext) {
@@ -50,6 +59,7 @@ class PortfolioViewModel: ObservableObject {
                 }
             }
             try context.save()
+            self.lastFetchDate = Date()
         } catch {
             print("Price fetch error: \(error)")
         }
@@ -65,7 +75,7 @@ class PortfolioViewModel: ObservableObject {
                     self.nextFetchIn -= 1
                 } else {
                     Task { await self.fetchPrices() }
-                    self.nextFetchIn = 60
+                    self.nextFetchIn = 15
                 }
             }
     }
@@ -89,5 +99,16 @@ class PortfolioViewModel: ObservableObject {
     var profitLossPercent: Double {
         guard totalCost > 0 else { return 0 }
         return (profitLoss / totalCost) * 100
+    }
+    
+    var displayModeLabel: String {
+        switch(pnlDisplayMode) {
+        case .amount:
+            "PnL"
+        case .percentage:
+            "% Change"
+        case .valueChange:
+            "Price"
+        }
     }
 }

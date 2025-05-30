@@ -11,35 +11,54 @@ import SwiftData
 struct PortfolioView: View {
     @Environment(\.modelContext) private var context
     @ObservedObject var viewModel: PortfolioViewModel
+    @AppStorage(AppStorageKeys.isValueHidden) private var isValueHidden: Bool = false
 
     @State private var toDeleteCoin: Coin?
     @State private var showAddTransaction = false
     @State private var showDeleteAlert = false
-                                 
+    @State private var showingPnLPicker = false
+
     var body: some View {
         NavigationStack {
             List {
-                Section {
+                Section(
+                    header:
+                        HStack {
+                            Text("Summary")
+                            Button(action: {
+                                isValueHidden.toggle()
+                            }) {
+                                Image(systemName: isValueHidden ? "eye.slash" : "eye")
+                                    .imageScale(.medium)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    ,footer:
+                        Group {
+                            if let lastFetch = viewModel.lastFetchDate {
+                                Text("Last Updated: \(lastFetch.formatted(date: .abbreviated, time: .standard))")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                ) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Portfolio Summary")
-                            .font(.headline)
-
-                        Text("Total Value: \(viewModel.totalValue.currencyString)")
+                        Text("Total Value: \(isValueHidden ? CommonConstant.hiddenValue : viewModel.totalValue.currencyString)")
                             .font(.title3.bold())
 
-                        Text("Unrealized P/L: \(viewModel.profitLoss.currencyString) (\(viewModel.profitLossPercent, specifier: "%.2f")%)")
+                        Text("Unrealized PnL: \(isValueHidden ? CommonConstant.hiddenValue : viewModel.profitLoss.currencyString) (\(viewModel.profitLossPercent, specifier: "%.2f")%)")
                             .foregroundColor(viewModel.profitLoss >= 0 ? .green : .red)
                     }
                     .padding(.vertical, 4)
                 }
                 
-                Section(header: Text("Coins")) {
+                Section(header: coinSectionHeader) {
                     if viewModel.coins.isEmpty {
                         ContentUnavailableView("No Tokens", systemImage: "bitcoinsign.circle")
                     } else {
                         ForEach(viewModel.coins) { coin in
                             NavigationLink(destination: TransactionListView(coin: coin)) {
-                                CoinRowView(coin: coin)
+                                CoinRowView(coin: coin, displayMode: viewModel.pnlDisplayMode)
                             }
                             .swipeActions {
                                 Button() {
@@ -63,16 +82,14 @@ struct PortfolioView: View {
                         Image(systemName: "plus")
                     }
                 }
-
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Text("Next fetch: \(viewModel.nextFetchIn)s")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
             }
             .onAppear {
                 viewModel.loadCoins()
                 viewModel.startAutoFetch()
+                
+                Task {
+                    await viewModel.fetchPrices()
+                }
             }
         }
         .sheet(isPresented: $showAddTransaction, onDismiss: {
@@ -89,6 +106,35 @@ struct PortfolioView: View {
             Button("Cancel", role: .cancel) {}
         } message: { _ in
             Text("This will delete the coin and all its transactions.")
+        }
+    }
+
+    var coinSectionHeader: some View {
+        HStack(spacing: 4) {
+            Text("Coins")
+
+            Spacer()
+
+            Button {
+                showingPnLPicker = true
+            } label: {
+                HStack(spacing: 4) {
+                    Text(viewModel.displayModeLabel)
+                        .foregroundColor(.secondary)
+                    Image(systemName: "chevron.down")
+                        .imageScale(.small)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .actionSheet(isPresented: $showingPnLPicker) {
+            ActionSheet(title: Text("Select View"), buttons: [
+                .default(Text("PnL")) { viewModel.pnlDisplayMode = .amount },
+                .default(Text("% Change")) { viewModel.pnlDisplayMode = .percentage },
+                .default(Text("Price")) { viewModel.pnlDisplayMode = .valueChange },
+                .cancel()
+            ])
         }
     }
 }

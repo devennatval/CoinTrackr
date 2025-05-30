@@ -30,17 +30,13 @@ struct TransactionRowView: View {
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(pnlColor)
-                    .background(
-                        Capsule()
-                            .fill(pnlColor.opacity(0.12))
-                    )
             }
 
             Text(transaction.date.formatted(date: .abbreviated, time: .shortened))
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
-        .padding()
+        .padding(4)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(Color(.secondarySystemGroupedBackground))

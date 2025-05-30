@@ -8,8 +8,33 @@
 import SwiftUI
 
 struct CoinRowView: View {
-    let coin: Coin
+    @AppStorage(AppStorageKeys.isValueHidden) private var isValueHidden: Bool = false
 
+    let coin: Coin
+    let displayMode: PnLDisplayMode
+
+    var valueChange: Double {
+        coin.currentPrice - coin.averagePrice
+    }
+
+    var pnl: Double {
+        valueChange * coin.totalAmount
+    }
+
+    var percentChange: Double {
+        (valueChange / coin.averagePrice) * 100
+    }
+
+    var pnlText: String {
+        switch displayMode {
+        case .amount:
+            return isValueHidden ? CommonConstant.hiddenValue : pnl.currencyString
+        case .percentage:
+            return String(format: "%+.2f%%", percentChange)
+        case .valueChange:
+            return valueChange.trimDecimal
+        }
+    }
     var body: some View {
         HStack {
             AsyncImage(url: URL(string: coin.iconURL)) { image in
@@ -28,16 +53,16 @@ struct CoinRowView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
-                Text("CMP: \(coin.currentPrice.trimDecimal)")
+                Text("Cur: \(coin.currentPrice.trimDecimal)")
                     .font(.subheadline)
+                    .foregroundColor(.secondary)
                 
             }
 
             Spacer()
 
-            let pnl = coin.currentPrice - coin.averagePrice
-            Text(String(format: "%+.2f", pnl))
-                .foregroundColor(pnl >= 0 ? .green : .red)
+            Text(pnlText)
+                .foregroundColor(valueChange >= 0 ? .green : .red)
         }
         .padding(.vertical, 4)
     }
@@ -52,6 +77,6 @@ struct CoinRowView: View {
         averagePrice: 1700,
         currentPrice: 1850,
         lastUpdated: .now
-    ))
+    ), displayMode: .amount)
     .padding()
 }

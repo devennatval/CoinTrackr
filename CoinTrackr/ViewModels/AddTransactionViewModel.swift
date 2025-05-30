@@ -14,6 +14,7 @@ class AddTransactionViewModel: ObservableObject {
     private let context: ModelContext
     
     // MARK: - Inputs
+    @Published var transactionDate: Date = Date()
     @Published var selectedCoin: Coin? {
         didSet {
             Task {
@@ -34,31 +35,39 @@ class AddTransactionViewModel: ObservableObject {
 
     private var previousSelectedCoin: Coin?
 
+    var priceValue: Double? {
+        price.localizedDouble
+    }
+
+    var coinAmountValue: Double? {
+        coinAmount.localizedDouble
+    }
+
+    var fiatAmountValue: Double? {
+        fiatAmount.localizedDouble
+    }
+    
     init(context: ModelContext) {
         self.context = context
     }
     
     func canSave() -> Bool {
-        (selectedCoin != nil || !customSymbol.isEmpty)
-        && Double(price) != nil
-        && Double(coinAmount) != nil
-        && Double(fiatAmount) != nil
+        selectedCoin != nil
+        && priceValue != nil
+        && coinAmountValue != nil
+        && fiatAmountValue != nil
     }
     
     func autoCalculate(ignoring: AddTransactionView.Field?) {
-        let priceVal = Double(price)
-        let amountVal = Double(coinAmount)
-        let fiatVal = Double(fiatAmount)
-
-        guard [priceVal, amountVal, fiatVal].compactMap({ $0 }).count == 2 else {
+        guard [priceValue, coinAmountValue, fiatAmountValue].compactMap({ $0 }).count == 2 else {
             return
         }
         
-        if ignoring != .fiatAmount, let p = priceVal, let a = amountVal {
+        if ignoring != .fiatAmount, let p = priceValue, let a = coinAmountValue {
             fiatAmount = String((p * a).trimDecimal)
-        } else if ignoring != .coinAmount, let p = priceVal, let f = fiatVal {
+        } else if ignoring != .coinAmount, let p = priceValue, p != 0, let f = fiatAmountValue {
             coinAmount = String((f / p).trimDecimal)
-        } else if ignoring != .price, let a = amountVal, let f = fiatVal {
+        } else if ignoring != .price, let a = coinAmountValue, a != 0, let f = fiatAmountValue {
             price = String((f / a).trimDecimal)
         }
     }
@@ -85,9 +94,10 @@ class AddTransactionViewModel: ObservableObject {
     }
     
     func saveTransaction(availableCoins: [Coin]) {
-        guard let price = Double(price),
-              let coinAmount = Double(coinAmount),
-              let fiatAmount = Double(fiatAmount) else { return }
+        guard let price = priceValue,
+              let coinAmount = coinAmountValue,
+              let fiatAmount = fiatAmountValue
+        else { return }
 
         let coin = resolveCoin(from: availableCoins)
         
@@ -96,7 +106,7 @@ class AddTransactionViewModel: ObservableObject {
             price: price,
             coinAmount: coinAmount,
             fiatAmount: fiatAmount,
-            date: Date()
+            date: transactionDate
         )
         
         context.insert(tx)
@@ -144,7 +154,6 @@ class AddTransactionViewModel: ObservableObject {
     }
     
     func selectAndInsertCoin(from dto: CoinGeckoSearchCoin) {
-        // Check if already exists (by CoinGecko ID or symbol, depending on your design)
         let id = dto.id
         let descriptor = FetchDescriptor<Coin>(
             predicate: #Predicate { $0.coinGeckoID == id }
