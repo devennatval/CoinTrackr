@@ -21,7 +21,7 @@ class PortfolioViewModel: ObservableObject {
 
     @Published var coins: [Coin] = []
     @Published var isFetching: Bool = false
-    @Published var nextFetchIn: Int = 60
+    @Published var nextFetchIn: Int = 15
     @Published var pnlDisplayMode: PnLDisplayMode = .amount
 
     private var timer: AnyCancellable?
@@ -72,7 +72,7 @@ class PortfolioViewModel: ObservableObject {
                     self.nextFetchIn -= 1
                 } else {
                     Task { await self.fetchPrices() }
-                    self.nextFetchIn = 60
+                    self.nextFetchIn = 15
                 }
             }
     }
