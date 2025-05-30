@@ -14,6 +14,7 @@ class AddTransactionViewModel: ObservableObject {
     private let context: ModelContext
     
     // MARK: - Inputs
+    @Published var transactionDate: Date = Date()
     @Published var selectedCoin: Coin? {
         didSet {
             Task {
@@ -96,7 +97,7 @@ class AddTransactionViewModel: ObservableObject {
             price: price,
             coinAmount: coinAmount,
             fiatAmount: fiatAmount,
-            date: Date()
+            date: transactionDate
         )
         
         context.insert(tx)
